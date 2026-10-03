@@ -1,8 +1,15 @@
-import cv2
+import cv2 as cv
 
-camera = cv2.VideoCapture(1)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 900)
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1600)
+camera = cv.VideoCapture(0)
+camera.set(cv.CAP_PROP_FRAME_HEIGHT, 1600)
+camera.set(cv.CAP_PROP_FRAME_WIDTH, 900)
+
+def text_detection(frame) :
+    gray_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+
+    threshed_frame = cv.adaptiveThreshold(gray_frame, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, blockSize=11, C=2)
+
+    return threshed_frame
 
 if not camera.isOpened():
     print("Error: Couldn't open the camera")
@@ -18,28 +25,27 @@ while True:
         print("Error: Faiiled to grab frame")
         break
 
-    cv2.putText(frame, "Image Capture Window", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 5, cv2.LINE_AA)
+    cv.imshow("Camera Preview", frame)
 
-    cv2.imshow("Camera Preview", frame)
-
-    key = cv2.waitKey(1) & 0xFF
+    key = cv.waitKey(1) & 0xFF
 
     if key == ord('s'):
         filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed/capturedImage.png"
-        cv2.imwrite(filename, frame)
+        cv.imwrite(filename, frame)
         print("Image succcessfully captured and saved")
         break
 
-    elif key == ord('c'):
-        # filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed/cannyImage.png"
-        grayscale_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        blur_frame = cv2.GaussianBlur(grayscale_frame, (3, 3), 1.4)
-        canny = cv2.Canny(blur_frame, threshold1=100, threshold2=100)
-        cv2.imshow("Canny Image", canny)
+    elif key == ord('t'):
+        filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed/thresholdimage.png"
+        threshed_image = text_detection(frame)
+        cv.imshow("Threshed Image", threshed_image)
+        cv.imwrite(filename, threshed_image)
 
     elif key == ord('q'):
         print("Closing camera without saving")
         break
 
+
+
 camera.release()
-cv2.destroyAllWindows()
+cv.destroyAllWindows()
