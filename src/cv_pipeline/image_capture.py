@@ -46,6 +46,7 @@ def cv_main(cam_width = 1280, cam_height = 720):
             cv.imwrite(filename, threshed_image)
             print("Threshed Image saved successfully")
             cv.imshow("Threshed Image", threshed_image)
+            break
 
         elif key == ord('q'):
             print("Closing camera without saving")
