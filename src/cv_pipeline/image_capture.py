@@ -1,6 +1,6 @@
 import cv2 as cv
 
-def text_detection(frame) :
+def get_threshed(frame) :
     gray_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
     blur_frame = cv.GaussianBlur(gray_frame, (3, 3), 0)
@@ -14,6 +14,7 @@ def cv_main(cam_width = 1280, cam_height = 720):
     camera.set(cv.CAP_PROP_FRAME_HEIGHT, cam_height)
     camera.set(cv.CAP_PROP_FRAME_WIDTH, cam_width)
 
+
     if not camera.isOpened():
         print("Error: Couldn't open the camera")
         exit()
@@ -25,6 +26,10 @@ def cv_main(cam_width = 1280, cam_height = 720):
 
     while True: 
         ret, frame = camera.read()
+        h, w = frame.shape[:2]
+
+        if w != cam_width or h != cam_height:
+            frame = cv.resize(frame, (cam_height, cam_width), interpolation=cv.INTER_AREA)
 
         if not ret:
             print("Error: Faiiled to grab frame")
@@ -42,7 +47,7 @@ def cv_main(cam_width = 1280, cam_height = 720):
 
         elif key == ord('t'):
             filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed\thresholdimage.png"
-            threshed_image = text_detection(frame)
+            threshed_image = get_threshed(frame)
             cv.imwrite(filename, threshed_image)
             print("Threshed Image saved successfully")
             cv.imshow("Threshed Image", threshed_image)
