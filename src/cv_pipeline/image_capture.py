@@ -28,9 +28,6 @@ def cv_main(cam_width = 1280, cam_height = 720):
         ret, frame = camera.read()
         h, w = frame.shape[:2]
 
-        if w != cam_width or h != cam_height:
-            frame = cv.resize(frame, (cam_height, cam_width), interpolation=cv.INTER_AREA)
-
         if not ret:
             print("Error: Faiiled to grab frame")
             break
