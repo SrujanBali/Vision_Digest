@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
+from cv_pipeline.tesseract_extraction import tesseract_text_extraction
+from cv_pipeline.image_capture import cv_main
 
 class Vision_Digest_GUI : 
     def __init__ (self, root):
@@ -26,14 +28,17 @@ class Vision_Digest_GUI :
         tab = ttk.Frame(self.notebook,style="TabBG.TFrame")
         self.notebook.add(tab, text="Screenshot / File OCR (Tesseract)")
 
-        label = tk.Label(tab, text="Upload a clean screenshot or document image", font=("Ariel", 16))
+        label = tk.Label(tab, text="Upload a clean screenshot or document image", font=("Ariel", 24, "bold"), bg="#27374D", fg="white")
         label.pack(pady=20)
 
         btn_upload = tk.Button(tab, text="Select Image File", command=self.upload_file, width=24, height=3, bg="#4CAF50", fg="white")
         btn_upload.pack(pady=10)
 
-        self.screeshot_output = tk.Text(tab, wrap=tk.WORD, width=70, height=15)
-        self.screeshot_output.pack(pady=10)
+        self.path_label = tk.Label(tab, text="No folder selected", font=("Ariel", 14), bg="#27374D", fg="white")
+        self.path_label.pack(pady=10)
+
+        self.screenshot_output = tk.Text(tab, wrap=tk.WORD, width=120, height=25)
+        self.screenshot_output.pack(pady=10)
 
     def setup_camera_tab(self):
         tab = ttk.Frame(self.notebook, style="TabBG.TFrame")
@@ -47,12 +52,19 @@ class Vision_Digest_GUI :
 
         self.camera_output = tk.Text(tab, wrap=tk.WORD, width=70, height=15)
         self.camera_output.pack(pady=10)
-
+        
     def upload_file(self):
-        pass
+        filepath = filedialog.askopenfilename(title="Select image", filetypes=[("Image Files", "*png; *jpg; *jpeg")])
+        if filepath:
+                self.screenshot_output.delete("1.0", tk.END)
+                self.path_label.config(text=f"{filepath}")
+                extracted_text = tesseract_text_extraction(filepath)
+                self.screenshot_output.insert(tk.END, extracted_text)
 
     def launch_camera(self):
-        pass
+        self.camera_output.delete("1.0", tk.END)
+        self.camera_output.insert(tk.END, "Launching OpenCV camera feed...\n[Running EasyOCR on capture...]\n")
+        cv_main()
 
 if __name__ == "__main__":
     root = tk.Tk()

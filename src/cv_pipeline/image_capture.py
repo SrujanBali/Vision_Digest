@@ -1,6 +1,6 @@
 import cv2 as cv
-from easyOCR_extraction import easyocr_text_extraction
-from tesseract_extraction import get_preprocessed_threshed
+from .easyOCR_extraction import easyocr_text_extraction
+from .tesseract_extraction import get_preprocessed_threshed
 
 def cv_main(cam_width = 1280, cam_height = 720):
     camera = cv.VideoCapture(0)
