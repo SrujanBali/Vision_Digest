@@ -1,3 +1,5 @@
+# Test your Image Capture settings and functionalities over here!!
+
 import cv2 as cv
 from .easyOCR_extraction import easyocr_text_extraction
 from .tesseract_extraction import get_preprocessed_threshed
