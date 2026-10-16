@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import cv2 as cv
+import threading
 from cv_pipeline.tesseract_extraction import tesseract_text_extraction
 from cv_pipeline.easyOCR_extraction import easyocr_text_extraction
 
@@ -48,7 +49,7 @@ class Vision_Digest_GUI :
         label = tk.Label(tab, text="Upload a clean screenshot or document image", font=("Ariel", 24, "bold"), bg="#27374D", fg="white")
         label.pack(pady=20)
 
-        btn_upload = tk.Button(tab, text="Select Image File", command=self.upload_file, width=24, height=3, bg="#4CAF50", fg="white")
+        btn_upload = tk.Button(tab, text="Select Image File", command=self.upload_file_thread, width=24, height=3, bg="#4CAF50", fg="white")
         btn_upload.pack(pady=10)
 
         self.path_label = tk.Label(tab, text="No folder selected", font=("Ariel", 14), bg="#27374D", fg="white")
@@ -76,7 +77,7 @@ class Vision_Digest_GUI :
         btn_frame.columnconfigure(0, weight=1)
         btn_frame.columnconfigure(1, weight=1)
 
-        self.btn_capture = tk.Button(btn_frame, text="Capture and Run EasyOCR", font=("Ariel", 16, "bold"),  command=self.capture_and_extract, width=22, height=2, bg="#4CAF50", fg="white", state=tk.DISABLED)
+        self.btn_capture = tk.Button(btn_frame, text="Capture and Run EasyOCR", font=("Ariel", 16, "bold"),  command=self.camera_thread, width=22, height=2, bg="#4CAF50", fg="white", state=tk.DISABLED)
         self.btn_capture.pack(pady=5)
 
         self.video_label = tk.Label(tab, bg="#27374D")
@@ -87,12 +88,18 @@ class Vision_Digest_GUI :
 
         btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="blue", font=("Ariel", 15, "bold"), width=24, height=2, command= lambda: self.copy_to_clipboard())
         btn_copy.pack(pady=8)
+
+    def upload_file_thread(self):
+        file_thread = threading.Thread(target=self.upload_file_and_extract)
+        file_thread.start()
         
-    def upload_file(self):
+    def upload_file_and_extract(self):
         filepath = filedialog.askopenfilename(title="Select image", filetypes=[("Image Files", "*png; *jpg; *jpeg")])
         if filepath:
                 self.screenshot_output.delete("1.0", tk.END)
+                self.screenshot_output.insert(tk.END, "Got the file! Please wait while Tesseract extracts the text...")
                 self.path_label.config(text=f"{filepath}")
+                self.screenshot_output.delete("1.0", tk.END)
                 extracted_text = tesseract_text_extraction(filepath)
                 self.screenshot_output.insert(tk.END, extracted_text)
                 self.raw_extracted_text.set("")
@@ -101,8 +108,8 @@ class Vision_Digest_GUI :
     def toggle_camera(self):
         if not self.is_camera_running:
              self.cap = cv.VideoCapture(1, cv.CAP_DSHOW)
-             self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 640)
-             self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 480)
+             self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
+             self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 500)
 
              if self.cap.isOpened():
                   self.is_camera_running = True
@@ -126,10 +133,15 @@ class Vision_Digest_GUI :
 
             self.root.after(15, self.update_video_stream)
 
+    def camera_thread(self):
+        cam_thread = threading.Thread(target=self.capture_and_extract)
+        cam_thread.start()
+
     def capture_and_extract(self):
         if self.current_frame is not None:
             filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed\capturedImage.png"
             cv.imwrite(filename, self.current_frame)
+            self.stop_camera()
 
             self.camera_output.delete("1.0", tk.END)
             self.camera_output.insert(tk.END, "Captures Image! Running EasyOCR on the image. Please Wait...")
