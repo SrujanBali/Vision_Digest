@@ -1,8 +1,8 @@
 # Test your Image Capture settings and functionalities over here!!
 
 import cv2 as cv
-from .easyOCR_extraction import easyocr_text_extraction
-from .tesseract_extraction import get_preprocessed_threshed
+from easyOCR_extraction import easyocr_text_extraction
+from tesseract_extraction import get_preprocessed_threshed
 
 def cv_main(cam_width = 1280, cam_height = 720):
     camera = cv.VideoCapture(0)
@@ -31,7 +31,7 @@ def cv_main(cam_width = 1280, cam_height = 720):
         key = cv.waitKey(1) & 0xFF
 
         if key == ord('s'):
-            filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed\capturedImage.png"
+            filename = r"Vision_Digest\data\processed\capturedImage.png" # Directory where you wanna save it
             cv.imwrite(filename, frame)
             text_extracted = easyocr_text_extraction(frame)
             print(text_extracted)
@@ -39,7 +39,7 @@ def cv_main(cam_width = 1280, cam_height = 720):
             break
 
         elif key == ord('p'):
-            filename = r"C:\Users\Srujan Bali\Documents\Srujan\Programming\Python Projects\Vision_Digest\data\processed\thresholdimage.png"
+            filename = r"Vision_Digest\data\processed\thresholdimage.png"  # Directory where you wanna save it 
             threshed_image = get_preprocessed_threshed(frame)
             cv.imwrite(filename, threshed_image)
             print("Threshed Image saved successfully")

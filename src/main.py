@@ -6,6 +6,7 @@ import cv2 as cv
 import threading
 from cv_pipeline.tesseract_extraction import tesseract_text_extraction
 from cv_pipeline.easyOCR_extraction import easyocr_text_extraction
+from npl_pipeline.spellcheck import spelling_autocorrector
 
 
 class Vision_Digest_GUI : 
@@ -13,6 +14,8 @@ class Vision_Digest_GUI :
         self.root = root
         self.root.title("Vision Digest")
         self.root.geometry("1280x700")
+
+        self.camera_device = 0
 
         style = ttk.Style()
         style.theme_use("default")
@@ -101,13 +104,15 @@ class Vision_Digest_GUI :
                 self.path_label.config(text=f"{filepath}")
                 self.screenshot_output.delete("1.0", tk.END)
                 extracted_text = tesseract_text_extraction(filepath)
-                self.screenshot_output.insert(tk.END, extracted_text)
+                self.screenshot_output.insert(tk.END, f"{extracted_text} \n")
+                spell_corrected_text = spelling_autocorrector(extracted_text)
+                self.screenshot_output.insert(tk.END, spell_corrected_text)
                 self.raw_extracted_text.set("")
                 self.raw_extracted_text.set(extracted_text)
 
     def toggle_camera(self):
         if not self.is_camera_running:
-             self.cap = cv.VideoCapture(1, cv.CAP_DSHOW)
+             self.cap = cv.VideoCapture(self.camera_device)
              self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
              self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 500)
 
@@ -148,7 +153,9 @@ class Vision_Digest_GUI :
 
             text_extracted = easyocr_text_extraction(self.current_frame)
             self.camera_output.delete("1.0", tk.END)
-            self.camera_output.insert(tk.END, text_extracted)
+            self.camera_output.insert(tk.END, f"{text_extracted} \n")
+            spell_corrected_text = spelling_autocorrector(text_extracted)
+            self.camera_output.insert(tk.END, spell_corrected_text)
             self.raw_extracted_text.set("")
             self.raw_extracted_text.set(text_extracted)
 
