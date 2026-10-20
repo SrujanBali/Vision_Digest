@@ -1,2 +1,2 @@
 # Vision_Digest
-A computer vison and natural language processing application focusing on extracting text from images and running various analysis on the extracted text.
+An integrated desktop application that bridges computer vision and natural language processing to extract, safely clean, and analyze text from images and live video streams.

@@ -13,9 +13,9 @@ class Vision_Digest_GUI :
     def __init__ (self, root):
         self.root = root
         self.root.title("Vision Digest")
-        self.root.geometry("1280x700")
+        self.root.geometry("1600x900")
 
-        self.camera_device = 0
+        self.camera_device = 1
 
         style = ttk.Style()
         style.theme_use("default")
@@ -58,17 +58,17 @@ class Vision_Digest_GUI :
         self.path_label = tk.Label(tab, text="No folder selected", font=("Ariel", 14), bg="#27374D", fg="white")
         self.path_label.pack(pady=10)
 
-        self.screenshot_output = tk.Text(tab, wrap=tk.WORD)
-        self.screenshot_output.pack(pady=15, padx=20, expand=True, fill="both")
+        self.screenshot_output = tk.Text(tab, wrap=tk.WORD, width=70, height=10)
+        self.screenshot_output.pack(pady=5, fill="x", padx=20)
 
-        btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="blue", font=("Ariel", 15, "bold"), width=24, height=3, command= lambda: self.copy_to_clipboard())
-        btn_copy.pack(padx=20, pady=10, fill="x")
+        btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="blue", font=("Ariel", 15, "bold"), width=24, height=2, command= lambda: self.copy_to_clipboard())
+        btn_copy.pack(pady=8)
 
     def setup_camera_tab(self):
         tab = ttk.Frame(self.notebook, style="TabBG.TFrame")
         self.notebook.add(tab, text="Live Camera Feed (EasyOCR)")
 
-        label = tk.Label(tab, text="Open Live camera  stream to capture real world text", font=("Ariel", 16, "bold"))
+        label = tk.Label(tab, text="Open Live camera  stream to capture real world text", font=("Ariel", 24, "bold"), bg="#27374D", fg="white")
         label.pack(pady=20)
 
         self.btn_cam = tk.Button(tab, text="Lauch Camera Stream", command=self.toggle_camera, width=24, height=3, bg="#2196F3", fg="white")
@@ -113,8 +113,10 @@ class Vision_Digest_GUI :
     def toggle_camera(self):
         if not self.is_camera_running:
              self.cap = cv.VideoCapture(self.camera_device)
-             self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
-             self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 500)
+             cam_width = int(self.cap.get(cv.CAP_PROP_FRAME_WIDTH))
+             cam_height = int(self.cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+             self.cap.set(cv.CAP_PROP_FRAME_WIDTH, cam_width)
+             self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, cam_height)
 
              if self.cap.isOpened():
                   self.is_camera_running = True
@@ -131,7 +133,15 @@ class Vision_Digest_GUI :
             if ret:
                 self.current_frame = frame
 
-                cv_image = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                height, width = frame.shape[:2]
+                if width > 1280 or height > 720:
+                    new_width = width // 2
+                    new_height = height // 2
+                    display_frame =  cv.resize(frame, (new_width, new_height), interpolation=cv.INTER_AREA)
+                else:
+                    display_frame = frame
+
+                cv_image = cv.cvtColor(display_frame, cv.COLOR_BGR2RGB)
                 pil_image = Image.fromarray(cv_image)
                 self.photo = ImageTk.PhotoImage(image=pil_image)
                 self.video_label.config(image=self.photo)
