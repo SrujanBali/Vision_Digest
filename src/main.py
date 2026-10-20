@@ -15,7 +15,7 @@ class Vision_Digest_GUI :
         self.root.title("Vision Digest")
         self.root.geometry("1600x900")
 
-        self.camera_device = 1
+        self.camera_device = 0
 
         style = ttk.Style()
         style.theme_use("default")
@@ -61,7 +61,7 @@ class Vision_Digest_GUI :
         self.screenshot_output = tk.Text(tab, wrap=tk.WORD, width=70, height=10)
         self.screenshot_output.pack(pady=5, fill="x", padx=20)
 
-        btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="blue", font=("Ariel", 15, "bold"), width=24, height=2, command= lambda: self.copy_to_clipboard())
+        btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="green", font=("Ariel", 15, "bold"), width=24, height=2, command= lambda: self.copy_to_clipboard())
         btn_copy.pack(pady=8)
 
     def setup_camera_tab(self):
@@ -70,6 +70,18 @@ class Vision_Digest_GUI :
 
         label = tk.Label(tab, text="Open Live camera  stream to capture real world text", font=("Ariel", 24, "bold"), bg="#27374D", fg="white")
         label.pack(pady=20)
+
+        selection_frame = ttk.Frame(tab, style="TabBG.TFrame")
+        selection_frame.pack(pady=5)
+
+        tk.Label(selection_frame, text="Select Camera:", font=("Ariel", 12), bg="#27374D", fg="white").pack(side=tk.LEFT, padx=5)
+
+        self.camera_combobox = ttk.Combobox(selection_frame, state="readonly", width=20)
+        self.camera_combobox.pack(side=tk.LEFT, padx=5)
+        self.camera_combobox.bind("<<ComboboxSelected>>", self.on_camera_select)
+
+        btn_refresh = tk.Button(selection_frame, text="Scan Cameras", command=self.scan_cameras_thread, bg="#607D8B", fg="white")
+        btn_refresh.pack(side=tk.LEFT, padx=5)
 
         self.btn_cam = tk.Button(tab, text="Lauch Camera Stream", command=self.toggle_camera, width=24, height=3, bg="#2196F3", fg="white")
         self.btn_cam.pack(pady=10)
@@ -80,7 +92,7 @@ class Vision_Digest_GUI :
         btn_frame.columnconfigure(0, weight=1)
         btn_frame.columnconfigure(1, weight=1)
 
-        self.btn_capture = tk.Button(btn_frame, text="Capture and Run EasyOCR", font=("Ariel", 16, "bold"),  command=self.camera_thread, width=22, height=2, bg="#4CAF50", fg="white", state=tk.DISABLED)
+        self.btn_capture = tk.Button(btn_frame, text="Capture and Run EasyOCR", font=("Ariel", 16, "bold"),  command=self.camera_thread, width=22, height=2, bg="gray", fg="black", state=tk.DISABLED)
         self.btn_capture.pack(pady=5)
 
         self.video_label = tk.Label(tab, bg="#27374D")
@@ -89,8 +101,10 @@ class Vision_Digest_GUI :
         self.camera_output = tk.Text(tab, wrap=tk.WORD, width=70, height=10)
         self.camera_output.pack(pady=5, fill="x", padx=20)
 
-        btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="blue", font=("Ariel", 15, "bold"), width=24, height=2, command= lambda: self.copy_to_clipboard())
+        btn_copy = tk.Button(tab, text="Copy to Clipboard", bg="green", font=("Ariel", 15, "bold"), width=24, height=2, command= lambda: self.copy_to_clipboard())
         btn_copy.pack(pady=8)
+
+        self.scan_cameras_thread()
 
     def upload_file_thread(self):
         file_thread = threading.Thread(target=self.upload_file_and_extract)
@@ -104,11 +118,46 @@ class Vision_Digest_GUI :
                 self.path_label.config(text=f"{filepath}")
                 self.screenshot_output.delete("1.0", tk.END)
                 extracted_text = tesseract_text_extraction(filepath)
-                self.screenshot_output.insert(tk.END, f"{extracted_text} \n")
                 spell_corrected_text = spelling_autocorrector(extracted_text)
                 self.screenshot_output.insert(tk.END, spell_corrected_text)
                 self.raw_extracted_text.set("")
                 self.raw_extracted_text.set(extracted_text)
+
+    def scan_cameras_thread(self):
+        threading.Thread(target=self.discover_cameras, daemon=True).start()
+
+    def discover_cameras(self):
+        available_devices = []
+
+        for i in range(4):
+            cap = cv.VideoCapture(i)
+            if cap.isOpened():
+                available_devices.append(f"Camera {i}")
+                cap.release()
+        if not available_devices:
+            available_devices = ["No Cameras found!"]
+
+        self.root.after(0, lambda: self.update_camera_dropdown(available_devices))
+
+    def update_camera_dropdown(self, devices):
+        self.camera_combobox["values"] = devices
+        self.camera_combobox.current(0)
+        self.update_selected_camera_index(devices[0])
+
+    def on_camera_select(self, event):
+        selected_text = self.camera_combobox.get()
+        self.update_selected_camera_index(selected_text)
+
+        if self.is_camera_running:
+            self.stop_camera()
+            self.toggle_camera()
+
+    def update_selected_camera_index(self, selecteion_str):
+        if "Camera" in selecteion_str:
+            try:
+                self.camera_device = int(selecteion_str.split(" ")[1])
+            except ValueError:
+                self.camera_device =  0
 
     def toggle_camera(self):
         if not self.is_camera_running:
@@ -120,6 +169,7 @@ class Vision_Digest_GUI :
 
              if self.cap.isOpened():
                   self.is_camera_running = True
+                  self.btn_capture.config(bg="lightgreen")
                   self.btn_cam.config(text="Stop Camera Stream", bg="#f44336")
                   self.btn_capture.config(state=tk.NORMAL)
                   self.update_video_stream()
@@ -163,7 +213,6 @@ class Vision_Digest_GUI :
 
             text_extracted = easyocr_text_extraction(self.current_frame)
             self.camera_output.delete("1.0", tk.END)
-            self.camera_output.insert(tk.END, f"{text_extracted} \n")
             spell_corrected_text = spelling_autocorrector(text_extracted)
             self.camera_output.insert(tk.END, spell_corrected_text)
             self.raw_extracted_text.set("")
@@ -176,6 +225,7 @@ class Vision_Digest_GUI :
 
     def stop_camera(self):
         self.is_camera_running = False
+        self.btn_capture.config(bg="gray")
         if self.cap:
             self.cap.release()
         self.video_label.config(image="")
