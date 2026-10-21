@@ -3,5 +3,10 @@
 /processed
 test.py
 tempCodeRunnerFile.py
+/temp_folder
+
+*.png 
+*.gif
+/Cropped_Images
 
 __pycache__/
