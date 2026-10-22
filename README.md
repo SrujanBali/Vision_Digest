@@ -26,7 +26,7 @@ Vision Digest is a high-performance desktop application that bridges computer vi
 ### Clone the repository
 ```bash
 git clone https://github.com/SrujanBali/Vision_Digest
-cv Vision_Digest
+cd Vision_Digest
 ```
 ### Install Dependencies
 ```bash
